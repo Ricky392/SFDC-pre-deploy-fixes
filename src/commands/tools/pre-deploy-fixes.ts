@@ -244,7 +244,7 @@ export default class ExecuteFilter extends Command {
 
       var token = elementValue
       //console.log('elementValue: '+JSON.stringify(elementValue))
-      console.log('filter: '+JSON.stringify(filter))
+      //console.log('filter: '+JSON.stringify(filter))
 
       if(filterElement['where']){
         console.log('abbiamo un where')
@@ -252,7 +252,7 @@ export default class ExecuteFilter extends Command {
           token = [token]
         } else{
           token = jsonQuery(filterElement['where'], { data: elementValue })    
-          console.log('token jsonquery: '+JSON.stringify(token.value))
+          //console.log('token jsonquery: '+JSON.stringify(token.value))
           if (token['value'] === undefined) return elementValue
         token = token.value
         }    
@@ -282,12 +282,13 @@ export default class ExecuteFilter extends Command {
           console.log('\n valuetofilter '+valueToFilter+'\n')
           token.forEach(tk => {
             if (typeof valueToFilter === 'object') {
-              if (valueToFilter.jsonQuery) 
-              tk[valueToFilter] = jsonQuery(valueToFilter.expression, { data: tk })
+              if (valueToFilter.jsonQuery){
+                //tk[valueToFilter] = jsonQuery(valueToFilter.expression, { data: tk })
+              }             
               else 
                   delete tk[valueToFilter]
             } else {
-              console.log('\nelement to filter: '+tk[valueToFilter]+'\n')
+              //console.log('\nelement to filter: '+tk[valueToFilter]+'\n')
               delete tk[valueToFilter]
             }
             if (self.smmryUpdatedFiles[file] == null)
