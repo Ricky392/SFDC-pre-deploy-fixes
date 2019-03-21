@@ -153,25 +153,27 @@ export default class ExecuteFilter extends Command {
     // Browse filters
     console.log('\nIGNORING PART')
     let self = this
-    filterConfig.filters.forEach(function (filter) { 
-      //console.log(filter.name+' ('+filter.description+')')
-      // Browse filter folders
-      filter.ignore_metadata.forEach(file => {
-        console.log('FILE: '+file)
-        // Browse folder files
-        //const folderFiles = self.fs.readdirSync(self.outputFolder+'/'+file)
-         // Build file name
-         const fpath = file.replace(/\\/g, '/');
-         //const browsedFileExtension = fpath.substring(fpath.lastIndexOf('.')+1);
-         const browsedFolder = fpath.substring(0, fpath.lastIndexOf('/'));
-         const browsedFile = fpath.substring(fpath.lastIndexOf('/')+1);
-         if(browsedFile === '*'){        
-          self.fse.emptyDir(self.outputFolder+'/'+browsedFolder)
-         } else {
-          self.fse.remove(self.outputFolder+'/'+fpath)
-         } 
+    if(filterConfig.filters != undefined){
+      filterConfig.filters.forEach(function (filter) { 
+        //console.log(filter.name+' ('+filter.description+')')
+        // Browse filter folders
+        filter.ignore_metadata.forEach(file => {
+          console.log('FILE: '+file)
+          // Browse folder files
+          //const folderFiles = self.fs.readdirSync(self.outputFolder+'/'+file)
+           // Build file name
+           const fpath = file.replace(/\\/g, '/');
+           //const browsedFileExtension = fpath.substring(fpath.lastIndexOf('.')+1);
+           const browsedFolder = fpath.substring(0, fpath.lastIndexOf('/'));
+           const browsedFile = fpath.substring(fpath.lastIndexOf('/')+1);
+           if(browsedFile === '*'){        
+            self.fse.emptyDir(self.outputFolder+'/'+browsedFolder)
+           } else {
+            self.fse.remove(self.outputFolder+'/'+fpath)
+           } 
+        })
       })
-    })
+    }
 
     // Ciclo tutti i file restanti così da effettuare i P-D-F
 
