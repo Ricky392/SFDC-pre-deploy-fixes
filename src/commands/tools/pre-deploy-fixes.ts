@@ -84,6 +84,7 @@
 
 import { Command, flags } from '@oclif/command'
 import { FILE } from 'dns'
+//import { isArray } from '@salesforce/ts-types';
 
 //import { format } from 'path';
 
@@ -187,19 +188,19 @@ export default class ExecuteFilter extends Command {
 
           if(browsedFile === '*'){                                    
             self.fse.readdirSync(self.outputFolder+'/'+browsedFolder).forEach(file => {
-              //const fullFilePath = self.outputFolder+'/'+metadataFolder+'/'+file;
+              const fullFilePath = self.outputFolder+'/'+browsedFolder+'/'+file;
               console.log('fix: '+file);            
-              //self.filterXmlFromFile(filter,fullFilePath)  
+              self.filterXmlFromFile(filterConfig['default'][filter],fullFilePath)  
             });                      
           } else {
-            self.filterXmlFromFile(filter,self.outputFolder+'/'+fpath)            
+            self.filterXmlFromFile(filterConfig['default'][filter],self.outputFolder+'/'+fpath)            
           }    
       })
 
     this.smmryResult.filterResults = this.smmryUpdatedFiles
 
     // Display results as JSON
-    console.log(JSON.stringify(this.smmryResult))
+    //console.log(JSON.stringify(this.smmryResult))
 
 
   }
@@ -208,75 +209,143 @@ export default class ExecuteFilter extends Command {
   filterXmlFromFile(filter,file) {
     var parser = new this.xml2js.Parser();
     var builder = new this.xml2js.Builder();
-    var jsonQuery = this.jsonQuery;
+    //var jsonQuery = this.jsonQuery;
 
     var self = this
     var xmlHasChanged = false
     xmlHasChanged
     const data = this.fse.readFileSync(file);
-    console.log(parser, builder, self)
-    console.log('jsonquery: '+jsonQuery("appMenu[* name!=Home]", { data: data }).value)
-    // parser.parseString(data, function (err2, fileXmlContent) {
-    //   console.log(`Parsed XML \n` + self.util.inspect(fileXmlContent, false, null))
-    //   Object.keys(fileXmlContent).forEach(eltKey => {
-    //     fileXmlContent[eltKey] = self.filterElement(fileXmlContent[eltKey],filter,file)
-    //   });
-    //   if (self.smmryUpdatedFiles[file] != null && self.smmryUpdatedFiles[file].updated === true) {
-    //     var updatedObjectXml = builder.buildObject(fileXmlContent);
-    //     self.fs.writeFileSync(file, updatedObjectXml)
-    //     console.log('Updated '+file)
-    //   }
-    // })
+    //console.log(parser, builder, self)
+    //console.log('jsonquery: '+jsonQuery("appMenu[* name!=Home]", { data: data }).value)
+
+    parser.parseString(data, function (err2, fileXmlContent) {
+      //console.log('filter: '+filter['replace']['executionUser'])
+      //console.log(`Parsed XML \n` + self.util.inspect(fileXmlContent, false, null))   
+      //console.log('filecontent: '+fileXmlContent) 
+      if(fileXmlContent){
+        Object.keys(fileXmlContent).forEach(eltKey => {
+          console.log('eltKey '+eltKey)
+          fileXmlContent[eltKey] = self.filterElement(fileXmlContent[eltKey],eltKey,filter,file)            
+        });
+        if (self.smmryUpdatedFiles[file] != null && self.smmryUpdatedFiles[file].updated === true) {
+          var updatedObjectXml = builder.buildObject(fileXmlContent);
+          self.fs.writeFileSync(file, updatedObjectXml)
+          //console.log('Updated '+file)
+        }
+      }    
+    })
   } 
 
-  filterElement(elementValue,filter,file){
+  filterElement(elementValue,eltKey,filter,file){
     var self = this
-    // Object case
-    if (typeof elementValue === 'object') {
-      Object.keys(elementValue).forEach(eltKey => {
-        let found = false
-        // Browse filter exclude_list for elementValue
-        filter.exclude_list.forEach( excludeDef => {
-          
-          if (excludeDef.type_tag === eltKey) {
-            // Found matching type tag
-            found = true
-            console.log('\nFound type: '+eltKey )
-            console.log(elementValue[eltKey]) 
-            // Filter type values
-            const typeValues = elementValue[eltKey]
-            let newTypeValues = []
-            typeValues.forEach(typeItem => {
-              if (excludeDef.values.includes(typeItem[excludeDef.identifier_tag]) || excludeDef.values.includes(typeItem[excludeDef.identifier_tag][0])) {
-                console.log('----- filtered '+typeItem[excludeDef.identifier_tag])
-                if (self.smmryUpdatedFiles[file] == null)
-                  self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
-                if (self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag] == null) 
-                  self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag] = []
-                self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag].push(typeItem[excludeDef.identifier_tag][0])
-              }
-              else {
-                console.log('--- kept '+typeItem[excludeDef.identifier_tag])
-                newTypeValues.push(typeItem)
-              }
-            });
-            elementValue[eltKey] = newTypeValues
-          }
+    var jsonQuery = this.jsonQuery;
+    
+    filter.forEach(filterElement => {
+
+      var token = elementValue
+      //console.log('elementValue: '+JSON.stringify(elementValue))
+      console.log('filter: '+JSON.stringify(filter))
+
+      if(filterElement['where']){
+        console.log('abbiamo un where')
+        if(filterElement['where'] === eltKey){
+          token = [token]
+        } else{
+          token = jsonQuery(filterElement['where'], { data: elementValue })    
+          console.log('token jsonquery: '+JSON.stringify(token.value))
+          if (token['value'] === undefined) return elementValue
+        token = token.value
+        }    
+      } else{
+        token = [token]
+      }
+
+      console.log('\ntoken: '+JSON.stringify(token))
+
+
+      // REPLACE filter
+      if(filterElement['replace']){
+        Object.keys(filterElement['replace']).forEach(t => {
+          console.log('t: '+t)
+          token.forEach(tk => {                    
+            tk[t] = filterElement['replace'][t]
+            if (self.smmryUpdatedFiles[file] == null)
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}        
+          })
         })
-        if (!found)
-          elementValue[eltKey] = self.filterElement(elementValue[eltKey],filter,file)
-      })
-    }
-    // Array case
-    else if (Array.isArray(elementValue)) {
-      let newElementValue = []
-      elementValue.forEach(element => {
-        element = self.filterElement(element,filter,file)
-        newElementValue.push(element)
-      })
-      elementValue = newElementValue
-    }
+      }
+      
+      //FILTER filter
+      if (filterElement['filter']) {
+        console.log('\n filterElementFilter.  '+filterElement['filter']+'\n')
+        filterElement['filter'].forEach(valueToFilter => {
+          console.log('\n valuetofilter '+valueToFilter+'\n')
+          token.forEach(tk => {
+            if (typeof valueToFilter === 'object') {
+              if (valueToFilter.jsonQuery) 
+              tk[valueToFilter] = jsonQuery(valueToFilter.expression, { data: tk })
+              else 
+                  delete tk[valueToFilter]
+            } else {
+              console.log('\nelement to filter: '+tk[valueToFilter]+'\n')
+              delete tk[valueToFilter]
+            }
+            if (self.smmryUpdatedFiles[file] == null)
+                self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+          })        
+        })
+      }
+
+    });
+
     return elementValue
+
+    // // Object case
+    // if (typeof elementValue === 'object') {
+    //   Object.keys(elementValue).forEach(eltKey => {
+    //     let found = false
+    //     // Browse filter exclude_list for elementValue
+    //     filter.exclude_list.forEach( excludeDef => {
+          
+    //       if (excludeDef.type_tag === eltKey) {
+    //         // Found matching type tag
+    //         found = true
+    //         console.log('\nFound type: '+eltKey )
+    //         console.log(elementValue[eltKey]) 
+    //         // Filter type values
+    //         const typeValues = elementValue[eltKey]
+    //         let newTypeValues = []
+    //         typeValues.forEach(typeItem => {
+    //           if (excludeDef.values.includes(typeItem[excludeDef.identifier_tag]) || excludeDef.values.includes(typeItem[excludeDef.identifier_tag][0])) {
+    //             console.log('----- filtered '+typeItem[excludeDef.identifier_tag])
+    //             if (self.smmryUpdatedFiles[file] == null)
+    //               self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+    //             if (self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag] == null) 
+    //               self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag] = []
+    //             self.smmryUpdatedFiles[file].excluded[excludeDef.type_tag].push(typeItem[excludeDef.identifier_tag][0])
+    //           }
+    //           else {
+    //             console.log('--- kept '+typeItem[excludeDef.identifier_tag])
+    //             newTypeValues.push(typeItem)
+    //           }
+    //         });
+    //         elementValue[eltKey] = newTypeValues
+    //       }
+    //     })
+    //     if (!found)
+    //       elementValue[eltKey] = self.filterElement(elementValue[eltKey],filter,file)
+    //   })
+    // }
+    // // Array case
+    // else if (Array.isArray(elementValue)) {
+    //   let newElementValue = []
+    //   elementValue.forEach(element => {
+    //     element = self.filterElement(element,filter,file)
+    //     newElementValue.push(element)
+    //   })
+    //   elementValue = newElementValue
+    // }
+     //return elementValue
   }
 
 }
