@@ -268,7 +268,7 @@ export default class ExecuteFilter extends Command {
       // REPLACE filter
       if(filterElement['replace']){
         Object.keys(filterElement['replace']).forEach(t => {
-          console.log('t: '+t)
+          //console.log('t: '+t)
           token.forEach(tk => {                    
             tk[t] = filterElement['replace'][t]
             if (self.smmryUpdatedFiles[file] == null)
@@ -279,9 +279,9 @@ export default class ExecuteFilter extends Command {
       
       //FILTER filter
       if (filterElement['filter']) {
-        console.log('\n filterElementFilter.  '+filterElement['filter']+'\n')
+        //console.log('\n filterElementFilter.  '+filterElement['filter']+'\n')
         filterElement['filter'].forEach(valueToFilter => {
-          console.log('\n valuetofilter '+valueToFilter+'\n')
+          //console.log('\n valuetofilter '+valueToFilter+'\n')
           token.forEach(tk => {
             if (typeof valueToFilter === 'object') {
               if (valueToFilter.jsonQuery){
@@ -295,6 +295,157 @@ export default class ExecuteFilter extends Command {
             }
             if (self.smmryUpdatedFiles[file] == null)
                 self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+          })        
+        })
+      }
+
+      // DELETEPERMISSIONBLOCKS
+      if (filterElement['deletePermissionBlocks']) {
+        //console.log('\n deletePermissionBlocks.  '+filterElement['deletePermissionBlocks']+'\n')
+        filterElement['deletePermissionBlocks'].forEach(valueToFilter => {
+          //console.log('\n valuetofilter '+valueToFilter+'\n')
+          token.forEach(tk => {            
+            var arr = tk['userPermissions'];
+
+            arr.forEach(tok => {
+              if(tok['name'].includes(valueToFilter)){
+                // console.log('beccato!!');
+                // console.log('tok to delete: ', tok)
+                // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
+                // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
+                tk['userPermissions'].splice(tk['userPermissions'].indexOf(tok),1)
+              }
+            })
+
+            //console.log('dopo eliminazione: ', tk['userPermissions'])
+            
+            if (self.smmryUpdatedFiles[file] == null){
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+            }                
+          })        
+        })
+      }
+
+      // CONCAT:
+      if (filterElement['concat']) {
+        //console.log('concat')
+        filterElement['concat'].forEach(valueToFilter => {
+            token.push(valueToFilter)
+        })
+        //console.log('token dopo: ', token)
+      }
+
+      // DISABLEPERMISSIONS
+      if (filterElement['disablePermissions']) {
+        //console.log('\n disablePermissions.  '+filterElement['disablePermissions']+'\n')
+        filterElement['disablePermissions'].forEach(valueToFilter => {
+          //console.log('\n valuetofilter '+valueToFilter+'\n')
+          //console.log('token: ', token)
+          token.forEach(tk => {            
+            var arr = tk['userPermissions'];
+
+            arr.forEach(tok => {
+              if(tok['name'].includes(valueToFilter)){
+                // console.log('beccato!!');
+                // console.log('tok to change: ', tok)
+                // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
+                // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
+                tok['enabled'] = ['false']
+              }
+            })
+
+            //console.log('dopo eliminazione: ', tk['userPermissions'])
+            
+            if (self.smmryUpdatedFiles[file] == null){
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+            }                
+          })        
+        })
+      }
+
+      // DISABLETABS
+      if (filterElement['disableTabs']) {
+        //console.log('\n disableTabs.  '+filterElement['disableTabs']+'\n')
+        filterElement['disableTabs'].forEach(valueToFilter => {
+          //console.log('\n valuetofilter '+valueToFilter+'\n')
+          //console.log('token: ', token)
+          token.forEach(tk => {            
+            var arr = tk['tabVisibilities'];
+
+            arr.forEach(tok => {
+              if(tok['tab'].includes(valueToFilter)){
+                // console.log('beccato!!');
+                // console.log('tok to change: ', tok)
+                // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
+                // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
+                tok['visibility'] = ['Hidden']
+              }
+            })
+
+            //console.log('dopo eliminazione: ', tk['tabVisibilities'])
+            
+            if (self.smmryUpdatedFiles[file] == null){
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+            }                
+          })        
+        })
+      }
+
+      // ENABLETABS
+      if (filterElement['enableTabs']) {
+        //console.log('\n enableTabs.  '+filterElement['enableTabs']+'\n')
+        filterElement['enableTabs'].forEach(valueToFilter => {
+          //console.log('\n valuetofilter '+valueToFilter+'\n')
+          token.forEach(tk => {            
+            var arr = tk['tabVisibilities'];
+
+            arr.forEach(tok => {
+              if(tok['tab'].includes(valueToFilter)){
+                // console.log('beccato!!');
+                // console.log('tok to change: ', tok)
+                // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
+                // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
+                tok['visibility'] = ['DefaultOn']
+              }
+            })
+
+            //console.log('dopo eliminazione: ', tk['tabVisibilities'])
+            
+            if (self.smmryUpdatedFiles[file] == null){
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+            }                
+          })        
+        })
+      }
+
+      // DISABLEOBJECTS
+      if (filterElement['disableObjects']) {
+        console.log('\n disableObjects.  '+filterElement['disableObjects']+'\n')
+        filterElement['disableObjects'].forEach(valueToFilter => {
+          console.log('\n valuetofilter '+valueToFilter+'\n')
+          token.forEach(tk => {            
+            var arr = tk['objectPermissions'];
+
+            arr.forEach(tok => {
+              if(tok['object'].includes(valueToFilter)){
+                // console.log('beccato!!');
+                // console.log('tok to change: ', tok)
+                // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
+                // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
+                tok['allowCreate'] = ['false']
+                tok['allowDelete'] = ['false']
+                tok['allowEdit'] = ['false']
+                tok['allowRead'] = ['false']
+                tok['modifyAllRecords'] = ['false']
+                tok['viewAllRecords'] = ['false']                
+              }
+            })
+
+            //console.log('dopo eliminazione: ', tk['tabVisibilities'])
+            
+            if (self.smmryUpdatedFiles[file] == null){
+              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+            }                
           })        
         })
       }
