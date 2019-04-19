@@ -22,7 +22,7 @@ $ npm install -g pre-deploy-fixes
 $ pre-deploy-fixes COMMAND
 running command...
 $ pre-deploy-fixes (-v|--version|version)
-pre-deploy-fixes/0.0.0 darwin-x64 node-v8.15.1
+pre-deploy-fixes/0.0.0 darwin-x64 node-v10.15.3
 $ pre-deploy-fixes --help [COMMAND]
 USAGE
   $ pre-deploy-fixes COMMAND
