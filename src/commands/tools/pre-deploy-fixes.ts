@@ -126,9 +126,9 @@ export default class ExecuteFilter extends Command {
     
     args
     // Get input arguments or default values
-    this.configFile = flags.configFile || '.pre-deploy-fixes.json'
-    this.inputFolder = flags.inputfolder || './src'
-    this.outputFolder = flags.outputfolder || 'output/'+this.path.basename(this.inputFolder)+'PdfOut'
+    this.configFile = flags.configFile || 'config/.pre-deploy-fixs.json'
+    this.inputFolder = flags.inputfolder || 'force-app/main/default'
+    this.outputFolder = flags.outputfolder || 'scripts/'+this.path.basename(this.inputFolder)+'PdfOut'
     this.log(`Initialize XML content filtering of ${this.inputFolder} ,using ${this.configFile} , into ${this.outputFolder}`)
 
     // Read json config file
@@ -285,7 +285,7 @@ export default class ExecuteFilter extends Command {
           token.forEach(tk => {
             if (typeof valueToFilter === 'object') {
               if (valueToFilter.jsonQuery){
-                //tk[valueToFilter] = jsonQuery(valueToFilter.expression, { data: tk })
+                tk[valueToFilter] = jsonQuery(valueToFilter.expression, { data: tk })
               }             
               else 
                   delete tk[valueToFilter]
@@ -309,19 +309,20 @@ export default class ExecuteFilter extends Command {
 
             arr.forEach(tok => {
               if(tok['name'].includes(valueToFilter)){
-                // console.log('beccato!!');
+                 console.log('beccato!!');
                 // console.log('tok to delete: ', tok)
                 // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
                 // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
                 tk['userPermissions'].splice(tk['userPermissions'].indexOf(tok),1)
+                if (self.smmryUpdatedFiles[file] == null){
+                  self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
+                }
               }
             })
 
             //console.log('dopo eliminazione: ', tk['userPermissions'])
             
-            if (self.smmryUpdatedFiles[file] == null){
-              self.smmryUpdatedFiles[file] = { updated: true, excluded : {}}
-            }                
+                          
           })        
         })
       }
