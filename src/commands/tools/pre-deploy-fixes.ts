@@ -309,7 +309,7 @@ export default class ExecuteFilter extends Command {
 
             arr.forEach(tok => {
               if(tok['name'].includes(valueToFilter)){
-                 console.log('beccato!!');
+                // console.log('beccato!!');
                 // console.log('tok to delete: ', tok)
                 // console.log('indexof: ', tk['userPermissions'].indexOf(tok))
                 // console.log('pos to del: ', tk['userPermissions'][tk['userPermissions'].indexOf(tok)]);
